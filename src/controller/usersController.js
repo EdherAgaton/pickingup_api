@@ -1,6 +1,7 @@
 const { error } = require('console')
 const {pool} = require('../routes/database')
 
+
 const getUserById = async (req, res) => {
 
     const { user, password } = req.body
@@ -11,23 +12,28 @@ const getUserById = async (req, res) => {
     
 
 
-
-    if(user != null && password != null ){
-
-        const response = await pool.query('SELECT * FROM usuario WHERE id_usuario = $1 AND contrasena = $2', [user, password], (error, result) => {
-            if(error){
-                console.error('Error en la consulta ', error);
-                res.status(500).json({error: 'Error en la consulta JSON'})
-            }else if (!result || result.lenght === 0 ) {
-                res.status(404).json({error: 'Usuario no encontrado'})
-                
-            }else{
-                res.json({mensage : 'Inicio de sesion exitoso', user: result[0] })
-            }
-
-        })
-
-    }
+    if (user != null && password != null) {
+        try {
+          const result = await pool.query('SELECT * FROM usuarios WHERE id_usuario = $1 AND contrasena = $2', [user, password]);
+    
+          if (result.rows.length === 0) {
+            res.status(404).json({ error: 'Usuario no encontrado' });
+          } else {
+            const data = result.rows[0];
+            res.status(200).json({
+              message: 'Inicio de sesión exitoso',
+              user_id: data.id_usuario,
+              user_name: data.nombre,
+              user_role: data.rol
+            });
+          }
+        } catch (error) {
+          console.error('Error en la consulta:', error);
+          res.status(500).json({ error: 'Error en la consulta JSON' });
+        }
+      } else {
+        res.status(400).json({ error: 'Faltan datos de usuario y contraseña' });
+      }
    
 
 }
